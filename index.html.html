@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>BuildTrack — Home Construction Tracker</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+<style>
+  :root{--sand:#F5F0E8;--sand2:#EDE6D6;--sand3:#D9CFBA;--ink:#1C1A16;--ink2:#4A4539;--ink3:#7A7264;--accent:#C45C2A;--accent2:#E8784A;--green:#3A6B4A;--green-light:#EAF2EC;--red:#A33030;--red-light:#FAEBEB;--amber:#B06A10;--amber-light:#FBF0DE;--blue:#1A5A94;--blue-light:#E6F1FB;--white:#FDFBF7;--border:rgba(28,26,22,0.12);--radius:10px;}
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:var(--sand);font-family:'DM Sans',sans-serif;color:var(--ink);min-height:100vh;}
+  header{background:var(--ink);padding:0 32px;display:flex;align-items:center;justify-content:space-between;height:56px;position:sticky;top:0;z-index:100;}
+  .logo{font-family:'DM Serif Display',serif;color:var(--sand);font-size:20px;letter-spacing:.02em;}.logo span{color:var(--accent2);}
+  .header-sub{font-size:12px;color:var(--ink3);font-family:'DM Mono',monospace;}
+  .container{max-width:1040px;margin:0 auto;padding:32px 24px 80px;}
+  .tabs{display:flex;gap:4px;margin-bottom:28px;background:var(--sand2);border-radius:10px;padding:4px;flex-wrap:wrap;}
+  .tab{flex:1;min-width:80px;padding:9px 0;text-align:center;font-size:13px;font-weight:500;border-radius:7px;cursor:pointer;transition:all .15s;color:var(--ink3);border:none;background:transparent;position:relative;}
+  .tab.active{background:var(--white);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.08);}
+  .tab-badge{position:absolute;top:4px;right:8px;background:var(--red);color:#fff;font-size:9px;font-family:'DM Mono',monospace;padding:1px 5px;border-radius:20px;min-width:16px;text-align:center;}
+  .tab-panel{display:none;}.tab-panel.active{display:block;}
+  .budget-banner{background:var(--white);border:1px solid var(--border);border-radius:14px;padding:24px 28px;margin-bottom:28px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:24px;}
+  .stat-label{font-size:11px;font-family:'DM Mono',monospace;color:var(--ink3);letter-spacing:.08em;text-transform:uppercase;margin-bottom:6px;}
+  .stat-value{font-family:'DM Serif Display',serif;font-size:28px;color:var(--ink);}
+  .stat-value.over{color:var(--red);}.stat-value.ok{color:var(--green);}
+  .progress-bar-wrap{margin-top:20px;grid-column:1/-1;}
+  .progress-track{background:var(--sand2);border-radius:4px;height:8px;position:relative;overflow:hidden;}
+  .progress-fill{height:100%;border-radius:4px;background:var(--accent);transition:width .4s;position:absolute;top:0;left:0;}
+  .progress-fill.over{background:var(--red);}
+  .progress-label{font-size:11px;font-family:'DM Mono',monospace;color:var(--ink3);margin-top:6px;display:flex;justify-content:space-between;}
+  .section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;margin-top:32px;}
+  .section-title{font-family:'DM Serif Display',serif;font-size:20px;color:var(--ink);}
+  .add-form{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);padding:18px 20px;margin-bottom:16px;display:none;}
+  .add-form.open{display:block;}
+  .form-grid{display:grid;grid-template-columns:2fr 1.5fr 1fr 1fr;gap:10px;align-items:end;}
+  .form-group label{font-size:11px;font-family:'DM Mono',monospace;color:var(--ink3);letter-spacing:.06em;display:block;margin-bottom:4px;}
+  .form-group input,.form-group select{width:100%;background:var(--sand);border:1px solid var(--border);border-radius:6px;padding:8px 10px;font-size:14px;font-family:'DM Sans',sans-serif;color:var(--ink);outline:none;}
+  .form-group input:focus,.form-group select:focus{border-color:var(--accent);}
+  .btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:6px;font-size:13px;font-family:'DM Sans',sans-serif;font-weight:500;cursor:pointer;border:1px solid transparent;transition:all .15s;}
+  .btn-primary{background:var(--accent);color:#fff;border-color:var(--accent);}.btn-primary:hover{background:#b05224;}
+  .btn-outline{background:transparent;color:var(--ink2);border-color:var(--border);}.btn-outline:hover{background:var(--sand2);}
+  .btn-danger{background:var(--red-light);color:var(--red);border-color:rgba(163,48,48,.2);}.btn-danger:hover{background:#f5d8d8;}
+  .btn-sm{padding:5px 10px;font-size:12px;}
+  .table-wrap{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;}
+  table{width:100%;border-collapse:collapse;}
+  thead th{background:var(--sand2);font-size:11px;font-family:'DM Mono',monospace;color:var(--ink3);letter-spacing:.08em;text-transform:uppercase;padding:10px 16px;text-align:left;font-weight:400;}
+  tbody tr{border-top:1px solid var(--border);transition:background .1s;}
+  tbody tr:hover{background:var(--sand);}
+  tbody td{padding:11px 16px;font-size:14px;color:var(--ink2);vertical-align:middle;}
+  tbody td:last-child{text-align:right;}
+  .category-badge{display:inline-block;font-size:11px;padding:2px 8px;border-radius:20px;font-family:'DM Mono',monospace;font-weight:500;}
+  .status-badge{font-size:11px;padding:3px 8px;border-radius:20px;font-weight:500;}
+  .status-paid{background:var(--green-light);color:var(--green);}
+  .status-pending{background:var(--amber-light);color:var(--amber);}
+  .delete-btn{background:none;border:none;cursor:pointer;color:var(--ink3);font-size:15px;opacity:.5;padding:2px 6px;border-radius:4px;}
+  .delete-btn:hover{opacity:1;color:var(--red);background:var(--red-light);}
+  .edit-btn{background:none;border:1px solid var(--border);cursor:pointer;color:var(--ink3);font-size:12px;padding:3px 8px;border-radius:4px;font-family:'DM Sans',sans-serif;}
+  .edit-btn:hover{background:var(--sand2);color:var(--ink);}
+  .restore-btn{background:var(--green-light);color:var(--green);border:1px solid rgba(58,107,74,.2);border-radius:4px;padding:3px 10px;font-size:12px;font-family:'DM Sans',sans-serif;cursor:pointer;font-weight:500;}
+  .restore-btn:hover{background:#d0ebd6;}
+  .perm-del-btn{background:none;border:1px solid rgba(163,48,48,.2);cursor:pointer;color:var(--red);font-size:12px;padding:3px 8px;border-radius:4px;font-family:'DM Sans',sans-serif;}
+  .perm-del-btn:hover{background:var(--red-light);}
+  .row-actions{display:flex;gap:4px;justify-content:flex-end;}
+  .inline-edit-row td{background:var(--sand);padding:10px 12px !important;}
+  .inline-edit-row input,.inline-edit-row select{background:var(--white);border:1.5px solid var(--accent);border-radius:5px;padding:5px 8px;font-size:13px;font-family:'DM Sans',sans-serif;color:var(--ink);outline:none;width:100%;}
+  .save-row-btn{background:var(--accent);color:#fff;border:none;border-radius:5px;padding:5px 12px;font-size:12px;font-family:'DM Sans',sans-serif;cursor:pointer;}
+  .cancel-row-btn{background:none;border:1px solid var(--border);border-radius:5px;padding:5px 10px;font-size:12px;font-family:'DM Sans',sans-serif;cursor:pointer;color:var(--ink3);}
+  .empty-state{padding:40px 20px;text-align:center;color:var(--ink3);font-size:14px;}
+  .empty-icon{font-size:32px;margin-bottom:10px;}
+  .cat-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin-bottom:28px;}
+  .cat-card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;}
+  .cat-name{font-size:11px;font-family:'DM Mono',monospace;color:var(--ink3);margin-bottom:4px;}
+  .cat-amount{font-family:'DM Serif Display',serif;font-size:18px;color:var(--ink);}
+  .cat-bar{height:5px;background:var(--sand2);border-radius:3px;margin-top:8px;}
+  .cat-bar-fill{height:100%;border-radius:3px;transition:width .4s;}
+  .budget-input-row{display:flex;align-items:center;gap:10px;margin-bottom:24px;background:var(--white);border:1px solid var(--border);border-radius:var(--radius);padding:14px 18px;flex-wrap:wrap;}
+  .budget-input-row label{font-size:13px;color:var(--ink2);font-weight:500;white-space:nowrap;}
+  .budget-input-row input{background:var(--sand);border:1px solid var(--border);border-radius:6px;padding:7px 10px;font-size:15px;font-family:'DM Serif Display',serif;color:var(--ink);width:180px;outline:none;}
+  .budget-input-row input:focus{border-color:var(--accent);}
+  .cat-list{border:1px solid var(--border);border-radius:8px;max-height:400px;overflow-y:auto;}
+  .cat-list-item{display:flex;align-items:center;justify-content:space-between;padding:9px 12px;border-bottom:1px solid var(--border);}
+  .cat-list-item:last-child{border-bottom:none;}
+  .cat-list-item:hover{background:var(--sand);}
+  .cat-item-left{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--ink2);flex:1;min-width:0;}
+  .cat-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+  .cat-item-actions{display:flex;gap:4px;align-items:center;flex-wrap:wrap;}
+  .cat-action-btn{background:none;border:1px solid var(--border);cursor:pointer;color:var(--ink3);font-size:12px;padding:3px 9px;border-radius:5px;font-family:'DM Sans',sans-serif;}
+  .cat-action-btn:hover{background:var(--sand2);color:var(--ink);}
+  .cat-action-btn.danger:hover{background:var(--red-light);color:var(--red);border-color:var(--red);}
+  .cat-action-btn.save-cat{background:var(--accent);color:#fff;border-color:var(--accent);}
+  .cat-action-btn.save-cat:hover{background:#b05224;}
+  .cat-edit-input{flex:1;background:var(--sand);border:1.5px solid var(--accent);border-radius:5px;padding:4px 8px;font-size:13px;font-family:'DM Sans',sans-serif;color:var(--ink);outline:none;min-width:0;}
+  .new-cat-row{display:flex;gap:8px;margin-bottom:14px;}
+  .new-cat-row input{flex:1;background:var(--sand);border:1px solid var(--border);border-radius:6px;padding:8px 10px;font-size:14px;font-family:'DM Sans',sans-serif;color:var(--ink);outline:none;}
+  .new-cat-row input:focus{border-color:var(--accent);}
+  .est-form-grid{display:grid;grid-template-columns:1.5fr 1.5fr 1fr 1fr 1fr;gap:10px;align-items:end;}
+  .est-card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:12px;}
+  .est-card-header{padding:12px 16px;display:flex;align-items:center;justify-content:space-between;background:var(--sand);border-bottom:1px solid var(--border);flex-wrap:wrap;gap:8px;}
+  .est-vendor{font-weight:500;font-size:14px;color:var(--ink);}
+  .est-body{padding:12px 16px;}
+  .est-meta{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:10px;}
+  .est-meta-item label{font-size:10px;font-family:'DM Mono',monospace;color:var(--ink3);text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:3px;}
+  .est-amount{font-family:'DM Serif Display',serif;font-size:20px;color:var(--ink);}
+  .est-notes{font-size:13px;color:var(--ink3);font-style:italic;margin-top:6px;padding-top:8px;border-top:1px solid var(--border);}
+  .est-actions{display:flex;gap:6px;align-items:center;flex-wrap:wrap;}
+  .status-received{background:var(--blue-light);color:var(--blue);}
+  .status-accepted{background:var(--green-light);color:var(--green);}
+  .status-rejected{background:var(--red-light);color:var(--red);}
+  .est-summary-banner{background:var(--white);border:1px solid var(--border);border-radius:12px;padding:16px 20px;margin-bottom:20px;display:grid;grid-template-columns:repeat(4,1fr);gap:16px;}
+  .est-stat{text-align:center;}
+  .est-stat-val{font-family:'DM Serif Display',serif;font-size:22px;color:var(--ink);}
+  .est-stat-lbl{font-size:11px;font-family:'DM Mono',monospace;color:var(--ink3);margin-top:3px;}
+  .filter-row{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;}
+  .filter-btn{padding:5px 12px;border-radius:20px;font-size:12px;font-family:'DM Mono',monospace;cursor:pointer;border:1px solid var(--border);background:var(--white);color:var(--ink3);transition:all .15s;}
+  .filter-btn.active{background:var(--ink);color:var(--sand);border-color:var(--ink);}
+  .use-est-btn{background:var(--green-light);color:var(--green);border:1px solid rgba(58,107,74,.2);border-radius:5px;padding:4px 10px;font-size:12px;font-family:'DM Sans',sans-serif;cursor:pointer;font-weight:500;}
+  .use-est-btn:hover{background:#d0ebd6;}
+  .compare-toolbar{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);padding:16px 20px;margin-bottom:20px;}
+  .compare-toolbar-title{font-size:13px;font-weight:500;color:var(--ink2);margin-bottom:10px;}
+  .compare-cat-filters{display:flex;gap:6px;flex-wrap:wrap;}
+  .cmp-cat-btn{padding:5px 14px;border-radius:20px;font-size:12px;font-family:'DM Mono',monospace;cursor:pointer;border:1px solid var(--border);background:var(--white);color:var(--ink3);transition:all .15s;}
+  .cmp-cat-btn.active{background:var(--ink);color:var(--sand);border-color:var(--ink);}
+  .compare-group{margin-bottom:28px;}
+  .compare-group-title{font-family:'DM Serif Display',serif;font-size:17px;color:var(--ink);margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+  .compare-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;}
+  .cmp-card{background:var(--white);border:1.5px solid var(--border);border-radius:12px;padding:16px;position:relative;}
+  .cmp-card.best{border-color:#3A6B4A;background:#f4fbf6;}.cmp-card.highest{border-color:#A33030;background:#fdf4f4;}
+  .cmp-badge{position:absolute;top:-10px;left:16px;font-size:10px;font-family:'DM Mono',monospace;font-weight:500;padding:2px 10px;border-radius:20px;}
+  .badge-best{background:var(--green-light);color:var(--green);}.badge-highest{background:var(--red-light);color:var(--red);}
+  .cmp-vendor{font-weight:500;font-size:14px;color:var(--ink);margin-bottom:4px;}
+  .cmp-amount{font-family:'DM Serif Display',serif;font-size:24px;color:var(--ink);margin:8px 0 4px;}
+  .cmp-diff{font-size:12px;font-family:'DM Mono',monospace;margin-bottom:10px;}
+  .diff-save{color:var(--green);}.diff-extra{color:var(--red);}
+  .cmp-bar-wrap{margin:10px 0 6px;}.cmp-bar-track{background:var(--sand2);border-radius:4px;height:6px;position:relative;overflow:hidden;}
+  .cmp-bar-fill{height:100%;border-radius:4px;position:absolute;top:0;left:0;}
+  .cmp-meta{font-size:11px;font-family:'DM Mono',monospace;color:var(--ink3);margin-top:6px;}.cmp-meta span{display:block;margin-bottom:2px;}
+  .cmp-notes{font-size:12px;color:var(--ink3);font-style:italic;margin-top:8px;padding-top:8px;border-top:1px solid var(--border);}
+  .cmp-status{font-size:11px;padding:2px 8px;border-radius:20px;font-weight:500;display:inline-block;margin-top:6px;}
+  .cmp-actions{display:flex;gap:6px;margin-top:12px;padding-top:10px;border-top:1px solid var(--border);}
+  .cmp-accept-btn{flex:1;background:var(--green-light);color:var(--green);border:1px solid rgba(58,107,74,.2);border-radius:5px;padding:6px 0;font-size:12px;font-family:'DM Sans',sans-serif;cursor:pointer;font-weight:500;text-align:center;}.cmp-accept-btn:hover{background:#d0ebd6;}
+  .cmp-reject-btn{flex:1;background:var(--red-light);color:var(--red);border:1px solid rgba(163,48,48,.2);border-radius:5px;padding:6px 0;font-size:12px;font-family:'DM Sans',sans-serif;cursor:pointer;font-weight:500;text-align:center;}.cmp-reject-btn:hover{background:#f5d8d8;}
+  .no-compare{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);padding:48px 20px;text-align:center;color:var(--ink3);}
+  .vc-search-row{display:flex;gap:10px;margin-bottom:16px;align-items:center;flex-wrap:wrap;}
+  .vc-search{flex:1;min-width:180px;background:var(--white);border:1px solid var(--border);border-radius:6px;padding:9px 14px;font-size:14px;font-family:'DM Sans',sans-serif;color:var(--ink);outline:none;}.vc-search:focus{border-color:var(--accent);}
+  .vc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;}
+  .vc-card{background:var(--white);border:1px solid var(--border);border-radius:12px;overflow:hidden;}
+  .vc-card-top{padding:16px 16px 12px;display:flex;align-items:center;gap:12px;}
+  .vc-avatar{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:500;font-size:15px;flex-shrink:0;}
+  .vc-name{font-weight:500;font-size:15px;color:var(--ink);}
+  .vc-body{padding:0 16px 14px;}
+  .vc-row{display:flex;align-items:center;gap:8px;padding:5px 0;border-top:1px solid var(--border);font-size:13px;color:var(--ink2);}.vc-row:first-child{border-top:none;}
+  .vc-icon{width:18px;text-align:center;font-size:13px;flex-shrink:0;color:var(--ink3);}
+  .vc-link{color:var(--blue);text-decoration:none;font-size:13px;}.vc-link:hover{text-decoration:underline;}
+  .vc-footer{padding:10px 16px;background:var(--sand);border-top:1px solid var(--border);display:flex;gap:6px;align-items:center;justify-content:space-between;}
+  .vc-est-count{font-size:11px;font-family:'DM Mono',monospace;color:var(--ink3);}
+  .vc-actions{display:flex;gap:6px;}
+  .vc-edit-btn{background:none;border:1px solid var(--border);cursor:pointer;color:var(--ink3);font-size:12px;padding:3px 10px;border-radius:4px;font-family:'DM Sans',sans-serif;}.vc-edit-btn:hover{background:var(--sand2);color:var(--ink);}
+  .vc-del-btn{background:none;border:none;cursor:pointer;color:var(--ink3);opacity:.5;font-size:14px;padding:3px 6px;border-radius:4px;}.vc-del-btn:hover{opacity:1;color:var(--red);background:var(--red-light);}
+  .vc-notes-text{font-size:12px;color:var(--ink3);font-style:italic;padding:6px 16px 10px;border-top:1px solid var(--border);}
+  .vc-summary{background:var(--white);border:1px solid var(--border);border-radius:12px;padding:16px 20px;margin-bottom:20px;display:grid;grid-template-columns:repeat(3,1fr);gap:16px;}
+  .bin-banner{background:var(--red-light);border:1px solid rgba(163,48,48,.15);border-radius:12px;padding:14px 20px;margin-bottom:20px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;}
+  .bin-section{margin-bottom:24px;}
+  .bin-section-label{font-size:11px;font-family:'DM Mono',monospace;color:var(--ink3);letter-spacing:.08em;text-transform:uppercase;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--border);}
+  .deleted-row{opacity:.75;}.deleted-row:hover{opacity:1;}
+  .cat-bin-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:10px;}
+  .cat-bin-card{background:var(--white);border:1px solid var(--border);border-radius:10px;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;gap:10px;}
+  .cat-bin-left{display:flex;align-items:center;gap:10px;}
+  .cat-bin-dot{width:12px;height:12px;border-radius:50%;flex-shrink:0;}
+  .cat-bin-name{font-weight:500;font-size:14px;color:var(--ink);}
+  .cat-bin-meta{font-size:11px;font-family:'DM Mono',monospace;color:var(--ink3);margin-top:2px;}
+  .cat-bin-actions{display:flex;gap:6px;flex-shrink:0;}
+  .modal-overlay{display:none;position:fixed;inset:0;background:rgba(28,26,22,.45);z-index:200;align-items:center;justify-content:center;}
+  .modal-overlay.open{display:flex;}
+  .modal{background:var(--white);border-radius:14px;padding:24px;width:100%;max-width:520px;margin:20px;max-height:90vh;overflow-y:auto;}
+  .modal-title{font-family:'DM Serif Display',serif;font-size:18px;margin-bottom:18px;}
+  .modal-form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .modal-actions{display:flex;gap:8px;margin-top:18px;justify-content:flex-end;}
+  @media(max-width:640px){.form-grid,.modal-form-grid{grid-template-columns:1fr 1fr;}.budget-banner{grid-template-columns:1fr 1fr;}.stat-value{font-size:22px;}.est-form-grid{grid-template-columns:1fr 1fr;}.est-meta{grid-template-columns:1fr 1fr;}.compare-cards,.vc-grid,.cat-bin-grid{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">Build<span>Track</span></div>
+  <div class="header-sub">Home Construction Tracker</div>
+</header>
+<div class="container">
+  <div class="budget-input-row">
+    <label>Total Budget (₹)</label>
+    <input type="number" id="budgetInput" placeholder="e.g. 3500000" value="0" oninput="updateAll()"/>
+    <span style="font-size:13px;color:var(--ink3);flex:1">Set your project budget to track spending</span>
+  </div>
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('expenses')">Expenses</button>
+    <button class="tab" onclick="switchTab('estimates')">Estimates</button>
+    <button class="tab" onclick="switchTab('compare')">Compare</button>
+    <button class="tab" onclick="switchTab('vendors')">Vendors</button>
+    <button class="tab" onclick="switchTab('categories')">Categories</button>
+    <button class="tab" onclick="switchTab('bin')">🗑 Bin<span class="tab-badge" id="binBadge" style="display:none">0</span></button>
+  </div>
+
+  <div id="tab-expenses" class="tab-panel active">
+    <div class="budget-banner">
+      <div><div class="stat-label">Total Budget</div><div class="stat-value" id="totalBudget">₹0</div></div>
+      <div><div class="stat-label">Amount Spent</div><div class="stat-value" id="totalSpent">₹0</div></div>
+      <div><div class="stat-label">Remaining</div><div class="stat-value ok" id="totalRemaining">₹0</div></div>
+      <div class="progress-bar-wrap"><div class="progress-track"><div class="progress-fill" id="progressFill" style="width:0%"></div></div><div class="progress-label"><span id="progressPct">0% used</span><span id="progressLeft">₹0 remaining</span></div></div>
+    </div>
+    <div class="section-header"><div class="section-title">By Category</div></div>
+    <div class="cat-grid" id="catGrid"></div>
+    <div class="section-header"><div class="section-title">All Expenses</div><button class="btn btn-primary" onclick="toggleForm()">+ Add Expense</button></div>
+    <div class="add-form" id="addForm">
+      <div class="form-grid">
+        <div class="form-group"><label>Description</label><input type="text" id="fDesc" placeholder="e.g. Concrete foundation pour"/></div>
+        <div class="form-group"><label>Category</label><select id="fCat"></select></div>
+        <div class="form-group"><label>Amount (₹)</label><input type="number" id="fAmt" placeholder="0"/></div>
+        <div class="form-group"><label>Status</label><select id="fStatus"><option>Paid</option><option>Pending</option></select></div>
+      </div>
+      <div style="margin-top:12px;display:flex;gap:8px;"><button class="btn btn-primary" onclick="addEntry()">Add Expense</button><button class="btn btn-outline" onclick="toggleForm()">Cancel</button></div>
+    </div>
+    <div class="table-wrap"><table><thead><tr><th>Description</th><th>Category</th><th>Date</th><th>Status</th><th>Amount</th><th></th></tr></thead><tbody id="tableBody"></tbody></table><div class="empty-state" id="emptyState"><div class="empty-icon">🏗️</div><div>No expenses yet. Add your first expense above.</div></div></div>
+  </div>
+
+  <div id="tab-estimates" class="tab-panel">
+    <div class="est-summary-banner" id="estSummary"></div>
+    <div class="section-header"><div class="section-title">Vendor Estimates</div><button class="btn btn-primary" onclick="toggleEstForm()">+ Add Estimate</button></div>
+    <div class="add-form" id="estForm">
+      <div class="est-form-grid">
+        <div class="form-group"><label>Vendor</label><select id="eVendorSel"><option value="">— Select vendor —</option></select></div>
+        <div class="form-group"><label>Category</label><select id="eCat"></select></div>
+        <div class="form-group"><label>Amount (₹)</label><input type="number" id="eAmt" placeholder="0"/></div>
+        <div class="form-group"><label>Valid Until</label><input type="text" id="eValid" placeholder="e.g. 30 Jun 2025"/></div>
+        <div class="form-group"><label>Status</label><select id="eStat"><option value="Received">Received</option><option value="Accepted">Accepted</option><option value="Rejected">Rejected</option><option value="Pending">Pending Response</option></select></div>
+      </div>
+      <div class="form-group" style="margin-top:10px;"><label>Notes</label><input type="text" id="eNotes" placeholder="e.g. Includes materials, excludes paint" style="width:100%"/></div>
+      <div style="margin-top:12px;display:flex;gap:8px;"><button class="btn btn-primary" onclick="addEstimate()">Save Estimate</button><button class="btn btn-outline" onclick="toggleEstForm()">Cancel</button></div>
+    </div>
+    <div class="filter-row"><button class="filter-btn active" onclick="setEstFilter('All',this)">All</button><button class="filter-btn" onclick="setEstFilter('Received',this)">Received</button><button class="filter-btn" onclick="setEstFilter('Accepted',this)">Accepted</button><button class="filter-btn" onclick="setEstFilter('Rejected',this)">Rejected</button><button class="filter-btn" onclick="setEstFilter('Pending',this)">Pending</button></div>
+    <div id="estList"></div>
+  </div>
+
+  <div id="tab-compare" class="tab-panel">
+    <div class="compare-toolbar"><div class="compare-toolbar-title">Filter by category</div><div class="compare-cat-filters" id="cmpCatFilters"></div></div>
+    <div id="compareContent"></div>
+  </div>
+
+  <div id="tab-vendors" class="tab-panel">
+    <div class="vc-summary" id="vcSummary"></div>
+    <div class="section-header"><div class="section-title">Vendor Contacts</div><button class="btn btn-primary" onclick="openVendorModal()">+ Add Vendor</button></div>
+    <div class="vc-search-row"><input class="vc-search" id="vcSearch" placeholder="Search by name, category, or trade…" oninput="renderVendors()"/><select id="vcCatFilter" style="background:var(--white);border:1px solid var(--border);border-radius:6px;padding:8px 12px;font-size:13px;font-family:'DM Sans',sans-serif;color:var(--ink);outline:none;" onchange="renderVendors()"><option value="">All categories</option></select></div>
+    <div class="vc-grid" id="vcGrid"></div>
+    <div class="empty-state" id="vcEmpty" style="display:none"><div class="empty-icon">👷</div><div>No vendors yet. Add your first vendor above.</div></div>
+  </div>
+
+  <div id="tab-categories" class="tab-panel">
+    <div class="section-header"><div class="section-title">Manage Categories</div></div>
+    <div style="background:var(--white);border:1px solid var(--border);border-radius:var(--radius);padding:18px 20px;margin-bottom:16px;">
+      <div style="font-size:13px;color:var(--ink2);margin-bottom:14px;">Add custom categories or rename/delete existing ones. Deleted categories go to the 🗑 Bin and can be restored.</div>
+      <div class="new-cat-row"><input type="text" id="newCatName" placeholder="New category name e.g. Smart Home" maxlength="32" onkeydown="if(event.key==='Enter')addCategory()"/><button class="btn btn-primary" onclick="addCategory()">+ Add Category</button></div>
+      <div id="catManagerList" class="cat-list"></div>
+    </div>
+    <div style="background:var(--amber-light);border:1px solid rgba(176,106,16,.2);border-radius:8px;padding:12px 16px;font-size:13px;color:var(--amber);">💡 Renaming updates all existing expenses and estimates automatically. Deleted categories go to 🗑 Bin — restore any time.</div>
+  </div>
+
+  <div id="tab-bin" class="tab-panel">
+    <div class="bin-banner"><div><div style="font-weight:500;font-size:14px;color:var(--red);margin-bottom:2px">🗑 Recycle Bin</div><div style="font-size:13px;color:var(--red)">Deleted expenses, estimates and categories are kept here. Restore or permanently delete.</div></div><button class="btn btn-danger btn-sm" onclick="emptyBin()">Empty Bin</button></div>
+    <div id="binContent"></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="vendorModal">
+  <div class="modal">
+    <div class="modal-title" id="modalTitle">Add Vendor</div>
+    <div class="modal-form-grid">
+      <div class="form-group" style="grid-column:1/-1"><label>Company / Vendor Name</label><input type="text" id="vName" placeholder="e.g. Solid Base LLC"/></div>
+      <div class="form-group" style="grid-column:1/-1"><label>Contact Person</label><input type="text" id="vContact" placeholder="e.g. Ramesh Kumar"/></div>
+      <div class="form-group"><label>Phone</label><input type="text" id="vPhone" placeholder="+91 98765 43210"/></div>
+      <div class="form-group"><label>Email</label><input type="text" id="vEmail" placeholder="vendor@example.com"/></div>
+      <div class="form-group"><label>Category / Trade</label><select id="vCat"></select></div>
+      <div class="form-group"><label>Rating</label><select id="vRating"><option value="0">No rating</option><option value="1">★ Poor</option><option value="2">★★ Fair</option><option value="3">★★★ Good</option><option value="4">★★★★ Very Good</option><option value="5">★★★★★ Excellent</option></select></div>
+      <div class="form-group" style="grid-column:1/-1"><label>Address</label><input type="text" id="vAddress" placeholder="e.g. 12 MG Road, Bengaluru"/></div>
+      <div class="form-group" style="grid-column:1/-1"><label>Notes</label><input type="text" id="vNotes" placeholder="e.g. Preferred for foundation work, reliable"/></div>
+    </div>
+    <div class="modal-actions"><button class="btn btn-outline" onclick="closeVendorModal()">Cancel</button><button class="btn btn-primary" onclick="saveVendor()">Save Vendor</button></div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script>
+// ── Storage ───────────────────────────────────────────────────────────────────
+const LS={get:k=>{try{return JSON.parse(localStorage.getItem('bt_'+k)||'null');}catch(e){return null;}},set:(k,v)=>{try{localStorage.setItem('bt_'+k,JSON.stringify(v));}catch(e){}}};
+
+// ── Color data ────────────────────────────────────────────────────────────────
+const BUILT_IN_COLORS={"Foundation":["#F5EFDE","#8B6914"],"Framing":["#EAF0F5","#2A5F82"],"Roofing":["#F2EDF8","#7040A8"],"Electrical":["#FBF0DE","#B06A10"],"Plumbing":["#E6F4F8","#1A7A94"],"HVAC":["#EAF5EE","#2A7A46"],"Insulation":["#FBF0F0","#A03030"],"Drywall":["#F0EDE8","#7A6840"],"Flooring":["#F5ECE8","#A04A28"],"Kitchen":["#FBF5E6","#8A6010"],"Bathrooms":["#EDF0F8","#304A90"],"Exterior":["#EAF5EC","#2A6A3C"],"Landscaping":["#EDF5E8","#3C7020"],"Permits & Fees":["#F5EAF5","#7A3090"],"Labor":["#F8EDE8","#8A3820"],"Materials":["#EAF0F8","#244878"],"Other":["#F0F0F0","#555555"]};
+const CUSTOM_PALETTE=[["#E8F5F0","#1A7A5A"],["#F5E8F0","#7A2060"],["#E8EEF8","#2A4888"],["#F8F0E8","#885020"],["#EEF8E8","#3A7020"],["#F8E8E8","#882020"],["#E8F8F8","#1A6868"],["#F0F0E8","#686840"],["#F0E8F8","#582888"],["#F8F8E8","#686810"]];
+const AVATAR_COLORS=[["#E6F1FB","#185FA5"],["#EAF2EC","#2A6B3C"],["#FBF0DE","#B06A10"],["#F2EDF8","#7040A8"],["#FAEBEB","#A33030"],["#E6F4F8","#1A7A94"],["#F5EAF5","#7A3090"],["#EAF5EC","#2A6A3C"]];
+
+// ── State ─────────────────────────────────────────────────────────────────────
+let categories=LS.get('categories')||["Foundation","Framing","Roofing","Electrical","Plumbing","HVAC","Insulation","Drywall","Flooring","Kitchen","Bathrooms","Exterior","Landscaping","Permits & Fees","Labor","Materials","Other"];
+let customColors=LS.get('customColors')||{};
+let colorIdx=LS.get('colorIdx')||0;
+let entries=LS.get('entries')||[];
+let estimates=LS.get('estimates')||[];
+let vendors=LS.get('vendors')||[];
+let bin=LS.get('bin')||[];
+let formOpen=false,estFormOpen=false,estFilter='All',cmpCatFilter='All';
+let editingVendorId=null,editingCatIndex=-1;
+
+function persist(){LS.set('categories',categories);LS.set('customColors',customColors);LS.set('colorIdx',colorIdx);LS.set('entries',entries);LS.set('estimates',estimates);LS.set('vendors',vendors);LS.set('bin',bin);}
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+function getCatColor(c){return customColors[c]||BUILT_IN_COLORS[c]||["#F0F0F0","#555555"];}
+function fmt(n){n=Math.round(n);if(isNaN(n))return'₹0';const neg=n<0,abs=Math.abs(n),s=abs.toString();let r=s.length<=3?s:s.slice(0,-3).replace(/\B(?=(\d{2})+(?!\d))/g,',')+','+s.slice(-3);return(neg?'-₹':'₹')+r;}
+function initials(n){return n.split(' ').slice(0,2).map(w=>w[0]||'').join('').toUpperCase()||'?';}
+function avatarColors(n){return AVATAR_COLORS[n.charCodeAt(0)%AVATAR_COLORS.length];}
+function todayStr(){return new Date().toLocaleDateString('en-IN',{month:'short',day:'numeric',year:'numeric'});}
+function updateBinBadge(){const n=bin.length,b=document.getElementById('binBadge');b.style.display=n>0?'inline':'none';b.textContent=n;}
+
+// ── Categories — INDEX-BASED (no string escaping issues) ──────────────────────
+function addCategory(){
+  const inp=document.getElementById('newCatName'),name=inp.value.trim();
+  if(!name){inp.focus();return;}
+  if(categories.some(c=>c.toLowerCase()===name.toLowerCase())){
+    inp.style.borderColor='var(--red)';inp.value='';inp.placeholder='Already exists!';
+    setTimeout(()=>{inp.style.borderColor='';inp.placeholder='New category name e.g. Smart Home';},1800);return;
+  }
+  categories.push(name);customColors[name]=CUSTOM_PALETTE[colorIdx++%CUSTOM_PALETTE.length];
+  inp.value='';persist();rebuildCatSelects();renderCatManager();updateAll();
+}
+
+function deleteCatByIndex(idx){
+  idx=parseInt(idx);
+  const name=categories[idx];
+  if(name===undefined)return;
+  const inUse=entries.filter(e=>e.cat===name).length+estimates.filter(e=>e.cat===name).length;
+  if(!confirm('Move "'+name+'" to Recycle Bin?'+(inUse>0?'\n('+inUse+' item(s) use this category — they keep the name.)':'')))return;
+  const[bg,fg]=getCatColor(name);
+  bin.push({_type:'category',_binId:Date.now(),name,color:[bg,fg],itemCount:inUse,_deletedAt:todayStr()});
+  categories.splice(idx,1);
+  if(customColors[name])delete customColors[name];
+  if(editingCatIndex===idx)editingCatIndex=-1;
+  persist();updateBinBadge();rebuildCatSelects();renderCatManager();updateAll();
+}
+
+function startEditCatByIndex(idx){
+  editingCatIndex=parseInt(idx);renderCatManager();
+  const inp=document.getElementById('catEditInp_'+idx);
+  if(inp){inp.focus();inp.select();}
+}
+
+function saveEditCatByIndex(idx){
+  idx=parseInt(idx);
+  const inp=document.getElementById('catEditInp_'+idx);if(!inp)return;
+  const oldName=categories[idx],newName=inp.value.trim();
+  editingCatIndex=-1;
+  if(!newName||newName===oldName){renderCatManager();return;}
+  if(categories.some((c,i)=>i!==idx&&c.toLowerCase()===newName.toLowerCase())){inp.style.borderColor='var(--red)';setTimeout(()=>renderCatManager(),1500);return;}
+  categories[idx]=newName;
+  const col=customColors[oldName]||BUILT_IN_COLORS[oldName];
+  if(col){customColors[newName]=col;if(customColors[oldName])delete customColors[oldName];}
+  entries.forEach(e=>{if(e.cat===oldName)e.cat=newName;});
+  estimates.forEach(e=>{if(e.cat===oldName)e.cat=newName;});
+  bin.forEach(e=>{if(e.cat===oldName)e.cat=newName;});
+  persist();rebuildCatSelects();renderCatManager();updateAll();renderEstimates();
+}
+
+function cancelEditCat(){editingCatIndex=-1;renderCatManager();}
+
+function renderCatManager(){
+  const el=document.getElementById('catManagerList');if(!el)return;
+  if(!categories.length){el.innerHTML='<div style="padding:20px;text-align:center;color:var(--ink3);font-size:13px">No categories. Add one above.</div>';return;}
+  el.innerHTML=categories.map((cat,idx)=>{
+    const[bg,fg]=getCatColor(cat);
+    const inUse=entries.filter(e=>e.cat===cat).length+estimates.filter(e=>e.cat===cat).length;
+    if(editingCatIndex===idx)return`<div class="cat-list-item"><div class="cat-item-left"><span class="cat-dot" style="background:${fg}"></span><input id="catEditInp_${idx}" class="cat-edit-input" value="${cat.replace(/&/g,'&amp;').replace(/"/g,'&quot;')}" onkeydown="if(event.key==='Enter')saveEditCatByIndex(${idx});if(event.key==='Escape')cancelEditCat();" onblur="saveEditCatByIndex(${idx})"/></div><div class="cat-item-actions"><button class="cat-action-btn save-cat" onmousedown="event.preventDefault();saveEditCatByIndex(${idx})">Save</button><button class="cat-action-btn" onmousedown="event.preventDefault();cancelEditCat()">Cancel</button></div></div>`;
+    return`<div class="cat-list-item"><div class="cat-item-left"><span class="cat-dot" style="background:${fg}"></span><span>${cat}</span>${inUse>0?`<span style="font-size:10px;font-family:'DM Mono',monospace;color:var(--ink3);margin-left:4px">${inUse} item${inUse>1?'s':''}</span>`:''}</div><div class="cat-item-actions"><span class="category-badge" style="background:${bg};color:${fg};font-size:10px">${cat}</span><button class="cat-action-btn" onclick="startEditCatByIndex(${idx})">✎ Rename</button><button class="cat-action-btn danger" onclick="deleteCatByIndex(${idx})">✕ Delete</button></div></div>`;
+  }).join('');
+}
+
+// ── Bin ───────────────────────────────────────────────────────────────────────
+function softDelete(id,type){
+  if(type==='expense'){const e=entries.find(x=>x.id===id);if(!e)return;bin.push({...e,_type:'expense',_binId:Date.now(),_deletedAt:todayStr()});entries=entries.filter(x=>x.id!==id);updateAll();}
+  else{const e=estimates.find(x=>x.id===id);if(!e)return;bin.push({...e,_type:'estimate',_binId:Date.now(),_deletedAt:todayStr()});estimates=estimates.filter(x=>x.id!==id);renderEstimates();}
+  persist();updateBinBadge();
+}
+
+function restoreFromBin(binId){
+  binId=parseInt(binId);
+  const item=bin.find(x=>x._binId===binId);if(!item)return;
+  if(item._type==='expense'){const{_type,_binId,_deletedAt,...c}=item;entries.push(c);updateAll();}
+  else if(item._type==='estimate'){const{_type,_binId,_deletedAt,...c}=item;estimates.push(c);renderEstimates();}
+  else if(item._type==='category'){
+    if(categories.some(c=>c.toLowerCase()===item.name.toLowerCase())){alert('"'+item.name+'" already exists.');return;}
+    categories.push(item.name);if(item.color)customColors[item.name]=item.color;
+    rebuildCatSelects();renderCatManager();updateAll();
+  }
+  bin=bin.filter(x=>x._binId!==binId);persist();updateBinBadge();renderBin();
+}
+
+function permDelete(binId){binId=parseInt(binId);if(!confirm('Permanently delete? Cannot be undone.'))return;bin=bin.filter(x=>x._binId!==binId);persist();updateBinBadge();renderBin();}
+function emptyBin(){if(!bin.length)return;if(!confirm('Permanently delete all '+bin.length+' item(s)?'))return;bin=[];persist();updateBinBadge();renderBin();}
+
+function renderBin(){
+  const el=document.getElementById('binContent');
+  if(!bin.length){el.innerHTML=`<div class="empty-state"><div class="empty-icon">🗑</div><div style="font-size:15px;font-weight:500;margin-bottom:6px">Recycle bin is empty</div><div>Deleted expenses, estimates and categories appear here.</div></div>`;return;}
+  const cats=bin.filter(x=>x._type==='category'),expenses=bin.filter(x=>x._type==='expense'),ests=bin.filter(x=>x._type==='estimate');
+  let html='';
+  if(cats.length){html+=`<div class="bin-section"><div class="bin-section-label">Categories (${cats.length})</div><div class="cat-bin-grid">`;html+=cats.map(c=>{const[bg,fg]=c.color||["#F0F0F0","#555"];return`<div class="cat-bin-card"><div class="cat-bin-left"><div class="cat-bin-dot" style="background:${fg}"></div><div><div class="cat-bin-name">${c.name}</div><div class="cat-bin-meta">Deleted ${c._deletedAt} · ${c.itemCount} linked item${c.itemCount!==1?'s':''}</div></div></div><div class="cat-bin-actions"><button class="restore-btn" onclick="restoreFromBin(${c._binId})">↩ Restore</button><button class="perm-del-btn" onclick="permDelete(${c._binId})">✕</button></div></div>`;}).join('');html+=`</div></div>`;}
+  if(expenses.length){html+=`<div class="bin-section"><div class="bin-section-label">Expenses (${expenses.length})</div><div class="table-wrap"><table><thead><tr><th>Description</th><th>Category</th><th>Date</th><th>Amount</th><th>Deleted On</th><th></th></tr></thead><tbody>`;html+=expenses.map(e=>{const[bg,fg]=getCatColor(e.cat);return`<tr class="deleted-row"><td style="font-weight:500;color:var(--ink)">${e.desc}</td><td><span class="category-badge" style="background:${bg};color:${fg}">${e.cat}</span></td><td style="font-size:12px;font-family:'DM Mono',monospace;color:var(--ink3)">${e.date}</td><td style="font-family:'DM Serif Display',serif;font-size:15px">${fmt(e.amt)}</td><td style="font-size:12px;font-family:'DM Mono',monospace;color:var(--ink3)">${e._deletedAt}</td><td><div class="row-actions"><button class="restore-btn" onclick="restoreFromBin(${e._binId})">↩ Restore</button><button class="perm-del-btn" onclick="permDelete(${e._binId})">✕</button></div></td></tr>`;}).join('');html+=`</tbody></table></div></div>`;}
+  if(ests.length){const sc={Received:'status-received',Accepted:'status-accepted',Rejected:'status-rejected',Pending:'status-pending'};html+=`<div class="bin-section"><div class="bin-section-label">Estimates (${ests.length})</div><div class="table-wrap"><table><thead><tr><th>Vendor</th><th>Category</th><th>Amount</th><th>Status</th><th>Deleted On</th><th></th></tr></thead><tbody>`;html+=ests.map(e=>{const[bg,fg]=getCatColor(e.cat);return`<tr class="deleted-row"><td style="font-weight:500;color:var(--ink)">${e.vendor}</td><td><span class="category-badge" style="background:${bg};color:${fg}">${e.cat}</span></td><td style="font-family:'DM Serif Display',serif;font-size:15px">${fmt(e.amt)}</td><td><span class="status-badge ${sc[e.stat]||'status-pending'}">${e.stat}</span></td><td style="font-size:12px;font-family:'DM Mono',monospace;color:var(--ink3)">${e._deletedAt}</td><td><div class="row-actions"><button class="restore-btn" onclick="restoreFromBin(${e._binId})">↩ Restore</button><button class="perm-del-btn" onclick="permDelete(${e._binId})">✕</button></div></td></tr>`;}).join('');html+=`</tbody></table></div></div>`;}
+  el.innerHTML=html;
+}
+
+// ── Dropdowns ─────────────────────────────────────────────────────────────────
+function rebuildCatSelects(){
+  ['fCat','eCat','vCat'].forEach(id=>{const sel=document.getElementById(id);if(!sel)return;const cur=sel.value;sel.innerHTML=categories.map(c=>`<option${c===cur?' selected':''}>${c}</option>`).join('');});
+  const vs=document.getElementById('eVendorSel');if(vs){const cur=vs.value;vs.innerHTML=`<option value="">— Select vendor —</option>`+vendors.map(v=>`<option value="${v.id}"${v.id==cur?' selected':''}>${v.name}</option>`).join('');}
+  const vcf=document.getElementById('vcCatFilter');if(vcf){const cur=vcf.value;vcf.innerHTML=`<option value="">All categories</option>`+categories.map(c=>`<option${c===cur?' selected':''}>${c}</option>`).join('');}
+}
+
+function switchTab(tab){
+  const TABS=['expenses','estimates','compare','vendors','categories','bin'];
+  document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('active',TABS[i]===tab));
+  document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+  document.getElementById('tab-'+tab).classList.add('active');
+  if(tab==='estimates')renderEstimates();if(tab==='compare')renderCompare();
+  if(tab==='vendors'){rebuildCatSelects();renderVendors();}
+  if(tab==='categories')renderCatManager();if(tab==='bin')renderBin();
+}
+
+// ── Vendor Modal ──────────────────────────────────────────────────────────────
+function openVendorModal(id=null){editingVendorId=id;rebuildCatSelects();document.getElementById('modalTitle').textContent=id?'Edit Vendor':'Add Vendor';if(id){const v=vendors.find(x=>x.id===id);if(v){document.getElementById('vName').value=v.name;document.getElementById('vContact').value=v.contact||'';document.getElementById('vPhone').value=v.phone||'';document.getElementById('vEmail').value=v.email||'';document.getElementById('vCat').value=v.cat;document.getElementById('vRating').value=v.rating||0;document.getElementById('vAddress').value=v.address||'';document.getElementById('vNotes').value=v.notes||'';}}else{['vName','vContact','vPhone','vEmail','vAddress','vNotes'].forEach(i=>document.getElementById(i).value='');document.getElementById('vRating').value=0;}document.getElementById('vendorModal').classList.add('open');setTimeout(()=>document.getElementById('vName').focus(),50);}
+function closeVendorModal(){document.getElementById('vendorModal').classList.remove('open');editingVendorId=null;}
+function saveVendor(){const name=document.getElementById('vName').value.trim();if(!name){alert('Vendor name is required.');return;}const v={id:editingVendorId||Date.now(),name,contact:document.getElementById('vContact').value.trim(),phone:document.getElementById('vPhone').value.trim(),email:document.getElementById('vEmail').value.trim(),cat:document.getElementById('vCat').value,rating:parseInt(document.getElementById('vRating').value)||0,address:document.getElementById('vAddress').value.trim(),notes:document.getElementById('vNotes').value.trim()};if(editingVendorId){const i=vendors.findIndex(x=>x.id===editingVendorId);if(i!==-1)vendors[i]=v;}else vendors.push(v);persist();closeVendorModal();rebuildCatSelects();renderVendors();}
+function deleteVendor(id){if(!confirm('Delete this vendor?'))return;vendors=vendors.filter(v=>v.id!==id);persist();rebuildCatSelects();renderVendors();}
+function renderVendors(){const q=(document.getElementById('vcSearch').value||'').toLowerCase(),catF=document.getElementById('vcCatFilter').value;const filtered=vendors.filter(v=>(!q||v.name.toLowerCase().includes(q)||(v.contact||'').toLowerCase().includes(q)||(v.cat||'').toLowerCase().includes(q))&&(!catF||v.cat===catF));const total=vendors.length,cats=[...new Set(vendors.map(v=>v.cat))].length,rated=vendors.filter(v=>v.rating>0),avg=rated.length?rated.reduce((s,v)=>s+v.rating,0)/rated.length:0;document.getElementById('vcSummary').innerHTML=`<div class="est-stat"><div class="est-stat-val">${total}</div><div class="est-stat-lbl">Total Vendors</div></div><div class="est-stat"><div class="est-stat-val">${cats}</div><div class="est-stat-lbl">Trade Categories</div></div><div class="est-stat"><div class="est-stat-val">${avg>0?avg.toFixed(1)+' ★':'—'}</div><div class="est-stat-lbl">Avg Rating</div></div>`;const grid=document.getElementById('vcGrid'),empty=document.getElementById('vcEmpty');if(!filtered.length){grid.innerHTML='';empty.style.display='block';return;}empty.style.display='none';grid.innerHTML=filtered.map(v=>{const[abg,afg]=avatarColors(v.name),[cbg,ccfg]=getCatColor(v.cat);const ec=estimates.filter(e=>e.vendor===v.name).length,ac=estimates.filter(e=>e.vendor===v.name&&e.stat==='Accepted').length;return`<div class="vc-card"><div class="vc-card-top"><div class="vc-avatar" style="background:${abg};color:${afg}">${initials(v.name)}</div><div style="flex:1;min-width:0"><div class="vc-name">${v.name}</div><div style="display:flex;align-items:center;gap:6px;margin-top:3px;flex-wrap:wrap"><span class="category-badge" style="background:${cbg};color:${ccfg};font-size:10px">${v.cat}</span>${v.rating>0?`<span style="color:var(--amber);font-size:12px">${'★'.repeat(v.rating)}<span style="color:var(--sand3)">${'★'.repeat(5-v.rating)}</span></span>`:''}</div></div></div><div class="vc-body">${v.contact?`<div class="vc-row"><span class="vc-icon">👤</span><span>${v.contact}</span></div>`:''} ${v.phone?`<div class="vc-row"><span class="vc-icon">📞</span><a class="vc-link" href="tel:${v.phone}">${v.phone}</a></div>`:''} ${v.email?`<div class="vc-row"><span class="vc-icon">✉</span><a class="vc-link" href="mailto:${v.email}">${v.email}</a></div>`:''} ${v.address?`<div class="vc-row"><span class="vc-icon">📍</span><span style="font-size:12px">${v.address}</span></div>`:''}</div>${v.notes?`<div class="vc-notes-text">${v.notes}</div>`:''}<div class="vc-footer"><span class="vc-est-count">${ec} estimate${ec!==1?'s':''} · ${ac} accepted</span><div class="vc-actions"><button class="vc-edit-btn" onclick="openVendorModal(${v.id})">✎ Edit</button><button class="vc-del-btn" onclick="deleteVendor(${v.id})">✕</button></div></div></div>`;}).join('');}
+
+// ── Expenses ──────────────────────────────────────────────────────────────────
+function toggleForm(){formOpen=!formOpen;document.getElementById('addForm').classList.toggle('open',formOpen);if(formOpen){rebuildCatSelects();document.getElementById('fDesc').focus();}}
+function addEntry(){const desc=document.getElementById('fDesc').value.trim(),cat=document.getElementById('fCat').value,amt=parseFloat(document.getElementById('fAmt').value),stat=document.getElementById('fStatus').value;if(!desc||isNaN(amt)||amt<=0){alert('Please fill in description and a valid amount.');return;}entries.push({id:Date.now(),desc,cat,amt,stat,date:todayStr()});persist();updateAll();document.getElementById('fDesc').value='';document.getElementById('fAmt').value='';toggleForm();}
+function deleteEntry(id){softDelete(id,'expense');}
+function editEntry(id){const e=entries.find(x=>x.id===id);if(!e)return;const catOpts=categories.map(c=>`<option${c===e.cat?' selected':''}>${c}</option>`).join('');const row=document.getElementById('row_'+id);row.className='inline-edit-row';row.innerHTML=`<td><input id="ei_desc_${id}" value="${e.desc.replace(/"/g,'&quot;')}"/></td><td><select id="ei_cat_${id}">${catOpts}</select></td><td><input id="ei_date_${id}" value="${e.date}"/></td><td><select id="ei_stat_${id}"><option${e.stat==='Paid'?' selected':''}>Paid</option><option${e.stat==='Pending'?' selected':''}>Pending</option></select></td><td><input id="ei_amt_${id}" type="number" value="${e.amt}"/></td><td><div class="row-actions"><button class="save-row-btn" onmousedown="event.preventDefault();saveEntry(${id})">Save</button><button class="cancel-row-btn" onmousedown="event.preventDefault();updateAll()">Cancel</button></div></td>`;document.getElementById('ei_desc_'+id).focus();}
+function saveEntry(id){const desc=document.getElementById('ei_desc_'+id).value.trim(),cat=document.getElementById('ei_cat_'+id).value,date=document.getElementById('ei_date_'+id).value.trim(),stat=document.getElementById('ei_stat_'+id).value,amt=parseFloat(document.getElementById('ei_amt_'+id).value);if(!desc||isNaN(amt)||amt<=0)return;const idx=entries.findIndex(x=>x.id===id);if(idx!==-1)entries[idx]={id,desc,cat,date,stat,amt};persist();updateAll();}
+
+// ── Estimates ─────────────────────────────────────────────────────────────────
+function toggleEstForm(){estFormOpen=!estFormOpen;document.getElementById('estForm').classList.toggle('open',estFormOpen);if(estFormOpen)rebuildCatSelects();}
+function addEstimate(){const vendorId=parseInt(document.getElementById('eVendorSel').value),vendorObj=vendors.find(v=>v.id===vendorId);if(!vendorObj){alert('Please select a vendor. Add vendors in the Vendors tab first.');return;}const cat=document.getElementById('eCat').value,amt=parseFloat(document.getElementById('eAmt').value),valid=document.getElementById('eValid').value.trim(),stat=document.getElementById('eStat').value,notes=document.getElementById('eNotes').value.trim();if(isNaN(amt)||amt<=0){alert('Please enter a valid amount.');return;}estimates.push({id:Date.now(),vendor:vendorObj.name,vendorId,cat,amt,valid,stat,notes,date:todayStr()});document.getElementById('eAmt').value='';document.getElementById('eValid').value='';document.getElementById('eNotes').value='';persist();toggleEstForm();renderEstimates();}
+function deleteEstimate(id){softDelete(id,'estimate');}
+function updateEstStatus(id,stat){const e=estimates.find(x=>x.id===id);if(e)e.stat=stat;persist();renderEstimates();}
+function useEstimateAsExpense(id){const e=estimates.find(x=>x.id===id);if(!e)return;entries.push({id:Date.now(),desc:'From estimate: '+e.vendor,cat:e.cat,amt:e.amt,stat:'Pending',date:todayStr()});e.stat='Accepted';persist();updateAll();renderEstimates();switchTab('expenses');}
+function acceptFromCompare(id){const e=estimates.find(x=>x.id===id);if(!e)return;entries.push({id:Date.now(),desc:'From estimate: '+e.vendor,cat:e.cat,amt:e.amt,stat:'Pending',date:todayStr()});e.stat='Accepted';persist();updateAll();renderCompare();}
+function rejectFromCompare(id){const e=estimates.find(x=>x.id===id);if(e)e.stat='Rejected';persist();renderCompare();}
+function setEstFilter(f,btn){estFilter=f;document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');renderEstimates();}
+function renderEstimates(){const filtered=estFilter==='All'?estimates:estimates.filter(e=>e.stat===estFilter);const total=estimates.length,received=estimates.filter(e=>e.stat==='Received').length,accepted=estimates.filter(e=>e.stat==='Accepted').length,totalVal=estimates.reduce((s,e)=>s+e.amt,0);document.getElementById('estSummary').innerHTML=`<div class="est-stat"><div class="est-stat-val">${total}</div><div class="est-stat-lbl">Total</div></div><div class="est-stat"><div class="est-stat-val">${received}</div><div class="est-stat-lbl">Received</div></div><div class="est-stat"><div class="est-stat-val">${accepted}</div><div class="est-stat-lbl">Accepted</div></div><div class="est-stat"><div class="est-stat-val" style="font-size:18px">${fmt(totalVal)}</div><div class="est-stat-lbl">Total Value</div></div>`;const list=document.getElementById('estList');if(!filtered.length){list.innerHTML=`<div class="empty-state"><div class="empty-icon">📋</div><div>No estimates yet. Add vendors first, then add estimates.</div></div>`;return;}const sc={Received:'status-received',Accepted:'status-accepted',Rejected:'status-rejected',Pending:'status-pending'},sl={Received:'Received',Accepted:'Accepted',Rejected:'Rejected',Pending:'Pending Response'};list.innerHTML=filtered.map(e=>{const[bg,fg]=getCatColor(e.cat),vendor=vendors.find(v=>v.name===e.vendor),vi=vendor&&vendor.phone?`<span style="font-size:11px;color:var(--ink3);font-family:'DM Mono',monospace;margin-left:4px">· ${vendor.phone}</span>`:'';return`<div class="est-card"><div class="est-card-header"><div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><span class="est-vendor">${e.vendor}</span>${vi}<span class="category-badge" style="background:${bg};color:${fg}">${e.cat}</span></div><div class="est-actions"><span class="status-badge ${sc[e.stat]||'status-pending'}">${sl[e.stat]||e.stat}</span>${e.stat!=='Accepted'?`<button class="use-est-btn" onclick="useEstimateAsExpense(${e.id})">+ Use as Expense</button>`:''}<button class="delete-btn" onclick="deleteEstimate(${e.id})">✕</button></div></div><div class="est-body"><div class="est-meta"><div class="est-meta-item"><label>Amount</label><span class="est-amount">${fmt(e.amt)}</span></div><div class="est-meta-item"><label>Received</label><span>${e.date}</span></div><div class="est-meta-item"><label>Valid Until</label><span>${e.valid||'—'}</span></div></div><div style="display:flex;gap:6px;flex-wrap:wrap">${['Received','Accepted','Rejected','Pending'].map(s=>`<button onclick="updateEstStatus(${e.id},'${s}')" style="padding:3px 10px;font-size:11px;border-radius:20px;cursor:pointer;border:1px solid var(--border);font-family:'DM Sans',sans-serif;background:${e.stat===s?'var(--ink)':'var(--white)'};color:${e.stat===s?'var(--sand)':'var(--ink3)'}">${s}</button>`).join('')}</div>${e.notes?`<div class="est-notes">${e.notes}</div>`:''}</div></div>`;}).join('');}
+
+// ── Compare ───────────────────────────────────────────────────────────────────
+function renderCompare(){const catCounts={};estimates.forEach(e=>{catCounts[e.cat]=(catCounts[e.cat]||0)+1;});const comparableCats=Object.entries(catCounts).filter(([,c])=>c>=2).map(([c])=>c);const filtersEl=document.getElementById('cmpCatFilters');filtersEl.innerHTML=`<button class="cmp-cat-btn${cmpCatFilter==='All'?' active':''}" onclick="setCmpFilter('All',this)">All categories</button>`+comparableCats.map(c=>`<button class="cmp-cat-btn${cmpCatFilter===c?' active':''}">${c}</button>`).join('');filtersEl.querySelectorAll('.cmp-cat-btn').forEach((btn,i)=>{if(i===0)return;const cat=comparableCats[i-1];btn.onclick=()=>setCmpFilter(cat,btn);});const content=document.getElementById('compareContent');if(!comparableCats.length){content.innerHTML=`<div class="no-compare"><div style="font-size:32px;margin-bottom:10px">📊</div><div style="font-size:15px;font-weight:500;margin-bottom:6px">No categories to compare yet</div><div style="font-size:13px;color:var(--ink3)">Add at least 2 estimates in the same category.</div></div>`;return;}const catsToShow=cmpCatFilter==='All'?comparableCats:[cmpCatFilter].filter(c=>comparableCats.includes(c));const sc={Received:'status-received',Accepted:'status-accepted',Rejected:'status-rejected',Pending:'status-pending'};content.innerHTML=catsToShow.map(cat=>{const group=estimates.filter(e=>e.cat===cat).sort((a,b)=>a.amt-b.amt),min=group[0].amt,max=group[group.length-1].amt;const[cbg,cfg]=getCatColor(cat);const cards=group.map(e=>{const isBest=e.amt===min&&group.filter(x=>x.amt===min).length<group.length,isHighest=e.amt===max&&group.filter(x=>x.amt===max).length<group.length&&group.length>1;const pct=max>0?Math.round(e.amt/max*100):100,diffFromMin=e.amt-min,isDecided=e.stat==='Accepted'||e.stat==='Rejected';const vendor=vendors.find(v=>v.name===e.vendor),[abg,afg]=vendor?avatarColors(vendor.name):["#F0F0F0","#555"];return`<div class="cmp-card${isBest?' best':isHighest?' highest':''}">${isBest?`<div class="cmp-badge badge-best">Lowest quote</div>`:''} ${isHighest?`<div class="cmp-badge badge-highest">Highest quote</div>`:''}<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px"><div style="width:28px;height:28px;border-radius:50%;background:${abg};color:${afg};display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:500;flex-shrink:0">${initials(e.vendor)}</div><div class="cmp-vendor">${e.vendor}</div></div>${vendor&&vendor.phone?`<div style="font-size:11px;font-family:'DM Mono',monospace;color:var(--ink3);margin-bottom:4px">${vendor.phone}</div>`:''}<div class="cmp-amount">${fmt(e.amt)}</div><div class="cmp-diff">${isBest&&group.length>1?`<span class="diff-save">Saves ${fmt(max-min)} vs highest</span>`:diffFromMin>0?`<span class="diff-extra">+${fmt(diffFromMin)} above lowest</span>`:group.length>1?`<span class="diff-save">Tied for lowest</span>`:''}</div><div class="cmp-bar-wrap"><div class="cmp-bar-track"><div class="cmp-bar-fill" style="width:${pct}%;background:${isBest?'var(--green)':isHighest?'var(--red)':'var(--amber)'}"></div></div></div><div class="cmp-meta">${e.valid?`<span>Valid: ${e.valid}</span>`:''}</div><span class="cmp-status ${sc[e.stat]||'status-pending'}">${e.stat}</span>${e.notes?`<div class="cmp-notes">${e.notes}</div>`:''} ${!isDecided?`<div class="cmp-actions"><button class="cmp-accept-btn" onclick="acceptFromCompare(${e.id})">✓ Accept</button><button class="cmp-reject-btn" onclick="rejectFromCompare(${e.id})">✕ Reject</button></div>`:''}</div>`;}).join('');return`<div class="compare-group"><div class="compare-group-title"><span class="category-badge" style="background:${cbg};color:${cfg};font-size:12px;padding:3px 10px">${cat}</span><span style="font-size:14px;color:var(--ink2)">${group.length} quotes</span>${max-min>0?`<span style="font-size:13px;font-family:'DM Mono',monospace;color:var(--green);margin-left:auto">Potential saving: ${fmt(max-min)}</span>`:''}</div><div class="compare-cards">${cards}</div></div>`;}).join('');}
+function setCmpFilter(cat,btn){cmpCatFilter=cat;document.querySelectorAll('.cmp-cat-btn').forEach(b=>b.classList.remove('active'));if(btn)btn.classList.add('active');renderCompare();}
+
+// ── Main render ───────────────────────────────────────────────────────────────
+function updateAll(){const budget=parseFloat(document.getElementById('budgetInput').value)||0;LS.set('budget',budget);const spent=entries.reduce((s,e)=>s+e.amt,0),remaining=budget-spent,pct=budget>0?Math.min(spent/budget*100,100):0,over=spent>budget;document.getElementById('totalBudget').textContent=fmt(budget);document.getElementById('totalSpent').textContent=fmt(spent);document.getElementById('totalRemaining').textContent=fmt(remaining);document.getElementById('totalRemaining').className='stat-value '+(remaining<0?'over':'ok');const fill=document.getElementById('progressFill');fill.style.width=pct.toFixed(1)+'%';fill.className='progress-fill'+(over?' over':'');document.getElementById('progressPct').textContent=pct.toFixed(1)+'% used';document.getElementById('progressLeft').textContent=(remaining<0?'⚠ ':'')+fmt(Math.abs(remaining))+(remaining<0?' over budget':' remaining');const cats={};entries.forEach(e=>{cats[e.cat]=(cats[e.cat]||0)+e.amt;});const catGrid=document.getElementById('catGrid');if(!Object.keys(cats).length){catGrid.innerHTML='';}else{catGrid.innerHTML=Object.entries(cats).sort((a,b)=>b[1]-a[1]).map(([cat,amt])=>{const[bg,fg]=getCatColor(cat),mx=Math.max(...Object.values(cats),1);return`<div class="cat-card"><div class="cat-name">${cat}</div><div class="cat-amount" style="color:${fg}">${fmt(amt)}</div><div class="cat-bar"><div class="cat-bar-fill" style="width:${(amt/mx*100).toFixed(1)}%;background:${fg}"></div></div></div>`;}).join('');}const tbody=document.getElementById('tableBody'),empty=document.getElementById('emptyState');if(!entries.length){tbody.innerHTML='';empty.style.display='block';return;}empty.style.display='none';tbody.innerHTML=[...entries].reverse().map(e=>{const[bg,fg]=getCatColor(e.cat),s=e.stat==='Paid'?'status-paid':'status-pending';return`<tr id="row_${e.id}"><td style="font-weight:500;color:var(--ink)">${e.desc}</td><td><span class="category-badge" style="background:${bg};color:${fg}">${e.cat}</span></td><td style="font-size:12px;font-family:'DM Mono',monospace;color:var(--ink3)">${e.date}</td><td><span class="status-badge ${s}">${e.stat}</span></td><td style="font-family:'DM Serif Display',serif;font-size:16px;color:var(--ink)">${fmt(e.amt)}</td><td><div class="row-actions"><button class="edit-btn" onclick="editEntry(${e.id})">✎ Edit</button><button class="delete-btn" onclick="deleteEntry(${e.id})">✕</button></div></td></tr>`;}).join('');}
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+document.getElementById('vendorModal').addEventListener('click',function(e){if(e.target===this)closeVendorModal();});
+const savedBudget=LS.get('budget');if(savedBudget)document.getElementById('budgetInput').value=savedBudget;
+rebuildCatSelects();updateAll();renderEstimates();updateBinBadge();
+</script>
+</body>
+</html>
